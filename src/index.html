@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link href='https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons' rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/vuetify/1.3.7/vuetify.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+</head>
+
+<body>
+  <div id="app">
+    <v-app id="inspire">
+
+      <!-- TOPBAR -->
+      <v-card color="grey lighten-4" flat height="200px" tile>
+        <v-toolbar dense dark>
+          <v-toolbar-side-icon></v-toolbar-side-icon>
+          <v-toolbar-title>TESTOMATE
+            <v-icon>thumb_up_alt</v-icon>
+          </v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn icon>
+            <v-icon>search</v-icon>
+          </v-btn>
+          <v-btn icon>
+            <v-icon>favorite</v-icon>
+          </v-btn>
+          <v-btn icon>
+            <v-icon>more_vert</v-icon>
+          </v-btn>
+        </v-toolbar>
+
+        <!-- MAIN TABLE -->
+        <v-data-table :headers="headers" :items="tests.database" :loading="tests_running" item-key="name" class="elevation-1">
+          <v-progress-linear slot="progress" color="blue" indeterminate></v-progress-linear>
+          <template slot="items" slot-scope="props">
+            <tr @click="props.expanded = !props.expanded">
+              <td>{{ props.item.name }}</td>
+              <td class="text-xs-center">{{ props.item.cases }}</td>
+              <td class="text-xs-center">{{ props.item.runs }}</td>
+              <td class="text-xs-center">{{ props.item.created }}</td>
+              <td class="text-xs-center">{{ props.item.aveduration }}</td>
+              <td class="text-xs-center">{{ props.item.lastrun }}</td>
+              <td class="text-xs-center">{{ props.item.passed }}</td>
+              <td class="text-xs-center">
+                <v-btn round color="primary" dark @click="runTest(props.item.id)">
+                  <v-icon dark>{{props.item.status}}</v-icon>
+                </v-btn>
+              </td>
+            </tr>
+          </template>
+          <template slot="expand" slot-scope="props">
+            <v-card flat color="grey lighten-2">
+              <v-card-text>
+                <h4 v-for="item in props.item.story">
+                  {{ item }}
+                </h4>
+                <div v-html="props.item.rundata">
+                </div>
+              </v-card-text>
+            </v-card>
+          </template>
+        </v-data-table>
+
+        <!-- NEW SCENARIO DIALOG -->
+        <div class="text-xs-center">
+          <v-dialog v-bind="tests" v-model="scenario_dialog" width="700">
+            <v-btn slot="activator" color="blue lighten-2">
+              Create new
+              <v-icon>home</v-icon>
+            </v-btn>
+            <v-card>
+              <v-card-title class="headline">
+                <v-text-field v-model="tests.currentScenario.name" label="Scenario"></v-text-field>
+              </v-card-title>
+
+
+              <!-- <button @click="addLine()"> BUTTON </button>
+              <li v-for="item in structWithOptions">
+                {{ item }}
+              </li> -->
+
+              <!-- <v-flex xs12 sm12 d-flex>
+                <v-select :items="structWithOptions" label="WITH..."></v-select>
+                <v-text-field label="Outline" placeholder="Placeholder" outline ></v-text-field>
+              </v-flex>
+
+              <v-flex xs12>
+                <v-chip close>Example Chip</v-chip>
+                <v-combobox v-model="select" :items="structGivenOption" chips label="I use chips" ></v-combobox>
+              </v-flex> -->
+
+              <!-- <v-combobox v-model="model2" :items="items" :search-input.sync="search" hide-selected hint="Maximum of 5 tags" label="Add some tags"
+                multiple persistent-hint small-chips> </v-combobox> -->
+
+              <!-- <v-flex xs12 sm12 d-flex>
+                <v-select :items="structGivenOption" label="GIVEN..."></v-select>
+              </v-flex>
+              <v-flex xs12 sm12 d-flex>
+                <v-select :items="structWithOptions" label="WHEN..."></v-select>
+              </v-flex>
+              <v-flex xs12 sm12 d-flex>
+                <v-select :items="structThenOptions" label="THEN..."></v-select>
+              </v-flex> -->
+              <!-- 
+            <v-flex xs12 sm12 d-flex>
+              <v-flex xs3 sm3 d-flex>
+                <v-combobox v-model="modelForWith" :items="optionsForWith" :search-input.sync="search" hint="With some data" label="WITH" persistent-hint> </v-combobox>
+              </v-flex>
+              <v-flex xs9 sm9 d-flex>
+                  <v-combobox v-model="modelForWithValues" :items="optionsForWithValues" :search-input.sync="search" outline hide-selected multiple small-chips> </v-combobox>
+              </v-flex>
+            </v-flex>
+            <v-combobox v-model="modelForGiven" :items="optionsForGiven" :search-input.sync="search" outline hide-selected hint="Given my page is in some state" label="GIVEN" multiple persistent-hint small-chips> </v-combobox>
+            <v-combobox v-model="modelForWhen" :items="optionsForWhen" :search-input.sync="search" outline hide-selected hint="When I perform some action" label="WHEN" multiple persistent-hint small-chips> </v-combobox>
+            <v-combobox v-model="modelForThen" :items="optionsForThen" :search-input.sync="search" outline hide-selected hint="Then I assert some expectation" label="THEN" multiple persistent-hint small-chips> </v-combobox> -->
+
+              <!-- <v-btn fab dark color="green">
+                  <v-icon dark>add</v-icon>
+                </v-btn> -->
+
+
+              <!-- <v-btn round color="primary" dark>WITH<v-icon dark>add</v-icon></v-btn> -->
+              <v-card color="blue lighten-4">
+                <v-card-text>
+                  <v-layout row wrap v-for="(data, index) in tests.currentScenario.with">
+                    <v-flex xs4 sm4>
+                      <v-combobox :ref="'with' + index" v-model="data.name" :items="tests.withOptions" :search-input.sync="data.search" label="with">
+                      </v-combobox>
+                      <!-- <v-text-field ref="10" v-model="data.name" label="with"></v-text-field> -->
+                      <!-- <v-combobox v-model="data.name" :items="tests.withOptions" :search-input.sync="search" label="with"> </v-combobox> -->
+                    </v-flex>
+                    <v-flex xs1 sm1></v-flex>
+                    <v-flex xs7 sm7>
+                      <v-text-field v-model="data.values" append-outer-icon="delete" :label="data.name" @click:append-outer="deleteArgumentRow('with', data.name)"></v-text-field>
+                    </v-flex>
+                  </v-layout>
+                  <v-btn block flat @click="addArgument('with')">Add Input Parameter
+                    <v-icon dark right>edit</v-icon>
+                  </v-btn>
+                </v-card-text>
+              </v-card>
+
+              <v-card color="orange lighten-4">
+                <v-card-text>
+                  <v-layout row wrap v-for="(data, index) in tests.currentScenario.given">
+                    <v-flex xs4 sm4>
+                      <v-combobox :ref="'given' + index" v-model="data.name" :items="tests.givenWhenOptions" :search-input.sync="data.search" label="given">
+                      </v-combobox>
+                    </v-flex>
+                    <v-flex xs1 sm1></v-flex>
+                    <v-flex xs7 sm7>
+                      <v-text-field v-model="data.values" append-outer-icon="delete" :label="data.name" @click:append-outer="deleteArgumentRow('given', data.name)"></v-text-field>
+                    </v-flex>
+                  </v-layout>
+                  <v-btn block flat @click="addArgument('given')">Add Setup Step
+                    <v-icon dark right>aspect_ratio</v-icon>
+                  </v-btn>
+                </v-card-text>
+              </v-card>
+
+              <v-card color="red lighten-4">
+                <v-card-text>
+                  <v-layout row wrap v-for="(data, index) in tests.currentScenario.when">
+                    <v-flex xs4 sm4>
+                      <!-- <v-text-field v-model="data.name" label="when"></v-text-field> -->
+                      <v-combobox :ref="'when' + index" v-model="data.name" :items="tests.givenWhenOptions" :search-input.sync="data.search" label="when">
+                      </v-combobox>
+                    </v-flex>
+                    <v-flex xs1 sm1></v-flex>
+                    <v-flex xs7 sm7>
+                      <v-text-field v-model="data.values" append-outer-icon="delete" :label="data.name" @click:append-outer="deleteArgumentRow('when', data.name)"></v-text-field>
+                    </v-flex>
+                  </v-layout>
+                  <v-btn block flat @click="addArgument('when')">Add Action
+                    <v-icon dark right>touch_app</v-icon>
+                  </v-btn>
+                </v-card-text>
+              </v-card>
+
+              <v-card color="green lighten-4">
+                <v-card-text>
+                  <v-layout row wrap v-for="(data, index) in tests.currentScenario.then">
+                    <v-flex xs4 sm4>
+                      <v-combobox :ref="'then' + index" v-model="data.name" :items="tests.thenOptions" :search-input.sync="data.search" label="then">
+                      </v-combobox>
+                      <!-- <v-text-field v-model="data.name" label="then"></v-text-field> -->
+                    </v-flex>
+                    <v-flex xs1 sm1></v-flex>
+                    <v-flex xs7 sm7>
+                      <v-text-field v-model="data.values" append-outer-icon="delete" :label="data.name" @click:append-outer="deleteArgumentRow('then', data.name)"></v-text-field>
+                    </v-flex>
+                  </v-layout>
+                  <v-btn block flat @click="addArgument('then')">Add Assertion
+                    <v-icon dark right>check_circle</v-icon>
+                  </v-btn>
+                </v-card-text>
+              </v-card>
+
+              <!-- <v-flex xs12>
+                    <v-text-field
+                      v-model="message"
+                      :append-icon="myIcon"
+                      :append-outer-icon="myIcon"
+                      :prepend-icon="icon"
+                      box
+                      clear-icon="mdi-close-circle"
+                      clearable
+                      label="Message"
+                      type="text"
+                      @click:append="toggleMarker"
+                      @click:append-outer="sendMessage"
+                      @click:prepend="changeIcon"
+                      @click:clear="clearMessage"
+                    ></v-text-field>
+                  </v-flex> -->
+
+
+
+              <!-- GIVEN
+                  <v-btn block color="blue" dark>Add Action</v-btn>
+                  WHEN
+                  <v-btn block color="blue" dark>Add Action</v-btn>
+                  THEN
+                  <v-btn block color="blue" dark>Add Assertion</v-btn> -->
+
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn color="primary" flat @click="saveCurrentScenario">
+                  Save
+                </v-btn>
+              </v-card-actions>
+
+            </v-card>
+          </v-dialog>
+        </div>
+
+    </v-app>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vuetify/1.3.7/vuetify.min.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script>
+    new Vue({
+      el: '#app',
+
+      watch: {
+        // modelForWith(val) {
+        //   var unordered = val.filter((item, index) => item.split('-')[0] != index);
+        //   if (unordered.length == 0) return;
+        //   this.modelForWith = val.map((item, index) => (item.split('-').length==2) ? index + '-' + item.split('-')[1] : index + '-' + item.split('-')[0] );
+        // },
+        // modelForGiven(val) {
+        //   var unordered = val.filter((item, index) => item.split('-')[0] != index);
+        //   if (unordered.length == 0) return;
+        //   this.modelForGiven = val.map((item, index) => (item.split('-').length == 2) ? index + '-' + item.split('-')[1] : index + '-' + item.split('-')[0]);
+        // },
+        // modelForWhen(val) {
+        //   var unordered = val.filter((item, index) => item.split('-')[0] != index);
+        //   if (unordered.length == 0) return;
+        //   this.modelForWhen = val.map((item, index) => (item.split('-').length == 2) ? index + '-' + item.split('-')[1] : index + '-' + item.split('-')[0]);
+        // },
+        // modelForThen(val) {
+        //   var unordered = val.filter((item, index) => item.split('-')[0] != index);
+        //   if (unordered.length == 0) return;
+        //   this.modelForThen = val.map((item, index) => (item.split('-').length == 2) ? index + '-' + item.split('-')[1] : index + '-' + item.split('-')[0]);
+        // }
+      },
+
+      computed: {
+        icon() {
+          return this.icons[this.iconIndex]
+        }
+
+      },
+
+      methods: {
+        // getPlayIcon(scenarioId){
+        //   var results = tests.database.scenario.filter((scenario) => scenario.id == scenarioId);
+        //   if (results.length ==0) return;
+        //   var scenario = results[0];
+        //   if (scenario.status == "ready") return play_arrow
+        //   if (scenario.status == "busy") return pause
+        // },
+        runTest(testId) {
+          var results = this.tests.database.filter((scenario) => scenario.id == testId);
+          if (results.length == 0) return;
+          var test = results[0];
+          
+          var scenario = {
+            id: test.id,
+            name: test.name,
+            with: test.with, 
+            given: test.given, 
+            when: test.when, 
+            then: test.then
+          }
+          
+          this.running_tests.push(test);
+          test.status = "pause";
+          this.tests_running = true;
+
+          var url = "http://localhost:3000/api/test/submit";
+          axios.post(url, {
+            jsonData: JSON.stringify(scenario)
+          })
+          .then((response) => {
+            this.checkForUpdates(test);
+          })
+          .catch((error) =>{
+            this.finishTest(test, "fail");
+            console.log(error);
+          });
+        },
+        
+
+        // testResult: {
+        //   status: "complete/busy/error",
+        //   runData: "<html></html>"
+        // },
+
+        checkForUpdates(test) {
+          var url = "http://localhost:3000/api/testStatus/" + testId;
+          fetch(url)
+            .then(data => { return data.json() })
+            .then(testResult => {
+              if (testResult.status != "complete") return;
+              this.finishTest(test, "pass", testResult.runData);
+            })
+            .catch(error => {
+              this.finishTest(test, "fail", error);
+            })
+          if (this.running_tests.length == 0) return;
+          setTimeout(() => this.checkForUpdates(test), 10000);
+        },
+
+        finishTest(test, testResult, data) {
+          test.status = "play_arrow";
+          test.result = testResult;
+          test.rundata = data;
+          this.running_tests = this.running_tests.filter(test => test.id != test.id)
+          if (this.running_tests.length == 0) {
+            this.tests_running = false;
+          }
+        },
+
+        getNewStructInstance(structName) {
+          switch (structName) {
+            case "with":
+            case "given":
+            case "when":
+            case "then": return { name: "", value: "", search: null }
+          }
+        },
+        focusOnNewElement(structName) {
+          setTimeout(() => {
+            var lastIndex = this.tests.currentScenario[structName].length - 1;
+            if (this.$refs[structName + lastIndex][0]) this.$refs[structName + lastIndex][0].focus();
+          }, 200)
+        },
+        addArgument(structName) {
+          var newStructInstance = this.getNewStructInstance(structName)
+          this.tests.currentScenario[structName].push(newStructInstance);
+          this.focusOnNewElement(structName);
+        },
+        deleteArgumentRow(structName, recordName) {
+          this.tests.currentScenario[structName] = this.tests.currentScenario[structName].filter((i) => i.name != recordName);
+        },
+        getNextScenarioId() {
+          if (this.tests.database.length == 0) return 1;
+          return Number(this.tests.database[this.tests.database.length - 1].id) + 1
+        },
+        resetCurrentScenario() {
+          this.tests.currentScenario.id = this.getNextScenarioId();
+          this.tests.currentScenario.name = "MyScenario-" + this.tests.currentScenario.id;
+          this.tests.currentScenario.with = [];
+          this.tests.currentScenario.given = [];
+          this.tests.currentScenario.when = [];
+          this.tests.currentScenario.then = [];
+          this.tests.currentScenario.story = [];
+        },
+        saveCurrentScenario() {
+          var scenario = this.tests.currentScenario;
+          var newScenario = {};
+          newScenario.id = this.getNextScenarioId();
+          newScenario.name = scenario.name;
+          newScenario.with = scenario.with.map(i => { return { name: i.name, values: i.values } });
+          newScenario.given = scenario.given.map(i => { return { name: i.name, values: i.values } });
+          newScenario.when = scenario.when.map(i => { return { name: i.name, values: i.values } });
+          newScenario.then = scenario.then.map(i => { return { name: i.name, values: i.values } });
+          newScenario.story = scenario.story;
+          newScenario.cases = null;
+          newScenario.runs = null;
+          newScenario.rundata = null;
+          newScenario.status = "play_arrow";
+          newScenario.created = new Date();
+          newScenario.aveduration = null;
+          newScenario.lastrun = null;
+          newScenario.passed = null;
+          console.log("newScenario", newScenario);
+          this.scenario_dialog = false;
+
+          // for (var x = 0; x < this.tests.currentScenario.with.length; x++) {
+          //   newScenario.WITH[(x + 1) + '-' + this.tests.currentScenario.with[x].name] = this.tests.currentScenario.with[x].values;
+          // }
+          // for (var x = 0; x < this.tests.currentScenario.given.length; x++) {
+          //   newScenario.GIVEN[(x + 1) + '-' + this.tests.currentScenario.given[x].name] = [this.tests.currentScenario.with[x].values];
+          // }
+          // for (var x = 0; x < this.tests.currentScenario.with.length; x++) {
+          //   newScenario.WHEN[(x + 1) + '-' + this.tests.currentScenario.when[x].name] = [this.tests.currentScenario.with[x].values];
+          // }
+          // for (var x = 0; x < this.tests.currentScenario.with.length; x++) {
+          //   newScenario.THEN[(x + 1) + '-' + this.tests.currentScenario.then[x].name] = [this.tests.currentScenario.with[x].values];
+          // }
+          this.tests.database.push(newScenario);
+          this.resetCurrentScenario();
+        },
+        // toggleMarker() {
+        //   this.marker = !this.marker
+        // },
+        // sendMessage() {
+        //   this.resetIcon()
+        //   this.clearMessage()
+        // },
+        // clearMessage() {
+        //   this.message = ''
+        // },
+        // resetIcon() {
+        //   this.iconIndex = 0
+        // },
+        // changeIcon() {
+        //   this.iconIndex === this.icons.length - 1
+        //     ? this.iconIndex = 0
+        //     : this.iconIndex++
+        // }
+      },
+      mounted() {
+        this.resetCurrentScenario();
+      },
+      data: () => ({
+        tests_running: false,
+        scenario_dialog: false,
+        running_tests: [],
+        headers: [
+          { text: 'Scenario Name', align: 'left', sortable: false, value: 'name' },
+          { text: 'Test Cases', align: 'center', value: 'cases' },
+          { text: 'Total Runs', align: 'center', value: 'totalruns' },
+          { text: 'Created', align: 'center', value: 'created' },
+          { text: 'Ave Duration', align: 'center', value: 'aveduration' },
+          { text: 'Last Run', align: 'center', value: 'lastrun' },
+          { text: 'Passed', align: 'center', value: 'passed' },
+          { text: 'Play', align: 'center', value: 'id' }
+        ],
+
+        tests: {
+
+          currentScenario: {
+            name: "newScenario1",
+            story: [],
+            with: [
+              { name: "Url", values: "www.google.com", search: null },
+              { name: "GameName", values: "asd", search: null },
+              { name: "TestCase", values: "dege", search: null }
+            ],
+            given: [
+              { story: "", name: "one", values: "hello", search: null },
+              { story: "", name: "two", values: "world", search: null }
+            ],
+            when: [
+              { story: "", name: "sdfg", values: "sdfs", search: null }
+            ],
+            then: [
+              { story: "", name: "asdaf", values: "", search: null }
+            ]
+          },
+
+          withOptions: ["Url", "TestCase", "GameName", "GameEngine"],
+          givenWhenOptions: ["RunScenario", "LaunchUrl", "WaitForGameToBeReady", "Rotate", "ClickSpin", "WaitInSeconds"],
+          //givenWhenOptions: [{ text: "RunScenario", value: "bob" }, { text: "LaunchUrl", value: "cat" }],
+          thenOptions: ["ScenarioEquals", "BalanceDecreases",],
+          database: [
+            {
+              id: 0,
+              rundata: "",
+              status: "play_arrow",
+              name: "Launch Google",
+              passed: "78%",
+              aveduration: "5 mins",
+              cases: 12,
+              created: "12/03/2018 10:09",
+              lastrun: "12/03/2018 14:32",
+              runs: 3,
+              rundata: "<iframe><html><body>RESULTS</body></html></iframe>",
+              story: ["Given game is running", "When I click spin", "Then my balance goes down"],
+              with: [
+                { name: "Url", values: "www.google.com", search: null },
+                { name: "GameName", values: "asd", search: null },
+                { name: "TestCase", values: "dege", search: null }
+              ],
+              given: [
+                { story: "", name: "one", values: "hello", search: null },
+                { story: "", name: "two", values: "world", search: null }
+              ],
+              when: [
+                { story: "", name: "sdfg", values: "sdfs", search: null }
+              ],
+              then: [
+                { story: "", name: "asdaf", values: "", search: null }
+              ]
+            },
+            {
+              id: 1,
+              status: "play_arrow",
+              name: "Launch Facebook",
+              passed: "100%",
+              aveduration: "12 mins",
+              cases: "1",
+              created: "30/10/2018 10:09",
+              lastrun: "01/11/2018 10:09",
+              runs: 13,
+              rundata: "<div>RESULTS</div>",
+              story: ["Given I launch facebook"],
+              given: [
+                { story: "", name: "LaunchUrl", values: "http://www.facebook.com", search: null },
+              ],
+            },
+
+          ]
+          // givenWhenOptions: [
+          //   { name: "LanchUrl", params: [{ name: "url", type: "string" }] },
+          //   { name: "WaitInSeconds", params: [{ name: "seconds", type: "number" }] },
+          //   { name: "SeleniumAction", params: [{ name: "seconds", type: "number" }] }
+          // ],
+          // thenOptions: [
+          //   { name: "RunScenario", params: [{ name: "scenario name", type: "string" }] }
+          // ],
+        },
+
+
+        //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        //   title: 'Preliminary report',
+        //   email: '',
+        //   rules: {
+        //     required: value => !!value || 'Required.',
+        //     counter: value => value.length <= 20 || 'Max 20 characters',
+        //     email: value => {
+        //       const pattern = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+        //       return pattern.test(value) || 'Invalid e-mail.'
+        //     }
+        //   },
+
+        //   //----------
+        //   myIcon: 'home',
+        //   password: 'Password',
+        //   show: false,
+        //   message: 'Hey!',
+        //   marker: true,
+        //   iconIndex: 0,
+        //   icons: [
+        //     'mdi-emoticon',
+        //     'mdi-emoticon-cool',
+        //     'mdi-emoticon-dead',
+        //     'mdi-emoticon-excited',
+        //     'mdi-emoticon-happy',
+        //     'mdi-emoticon-neutral',
+        //     'mdi-emoticon-sad',
+        //     'mdi-emoticon-tongue'
+        //   ],
+
+        //   optionsForWith: ['TestCase', 'Url', 'GameName'],
+        //   modelForWith: [],
+        //   optionsForWithValues: ['val1', 'val2', 'val3'],
+        //   modelForWithValues: [],
+
+        //   optionsForGiven: ['LaunchUrl', 'RunScenario', 'WaitInSeconds', 'ClickSpin'],
+        //   modelForGiven: [],
+        //   optionsForWhen: ['LaunchUrl', 'RunScenario', 'WaitInSeconds', 'ClickSpin'],
+        //   modelForWhen: [],
+        //   optionsForThen: ['RunScenario', 'Programming', 'Vue', 'Vuetify'],
+        //   modelForThen: [],
+
+
+        //   testBuilder: {
+        //     structs: {
+
+        //     }
+        //   },
+
+        //   addLine: function () { this.structWithOptions.push("HELLO") },
+        //   structWithOptions: ['Url', 'GameName', 'TestCase', 'Buzz'],
+        //   structGivenOption: ['LaunchUrl', 'WaitForGameToBeReady', 'TestCase', 'Buzz'],
+        //   structWhenOptions: ['Url', 'GameName', 'TestCase', 'Buzz'],
+        //   structThenOptions: ['Url', 'GameName', 'TestCase', 'Buzz'],
+
+
+
+
+        //   desserts: [
+        //     {
+        //       value: false,
+        //       name: 'Frozen Yogurt',
+        //       calories: 159,
+        //       fat: 6.0,
+        //       carbs: 24,
+        //       protein: 4.0,
+        //       iron: '1%'
+        //     },
+        //     {
+        //       value: false,
+        //       name: 'Ice cream sandwich',
+        //       calories: 237,
+        //       fat: 9.0,
+        //       carbs: 37,
+        //       protein: 4.3,
+        //       iron: '1%'
+        //     },
+        //     {
+        //       value: false,
+        //       name: 'Eclair',
+        //       calories: 262,
+        //       fat: 16.0,
+        //       carbs: 23,
+        //       protein: 6.0,
+        //       iron: '7%'
+        //     },
+        //     {
+        //       value: false,
+        //       name: 'Cupcake',
+        //       calories: 305,
+        //       fat: 3.7,
+        //       carbs: 67,
+        //       protein: 4.3,
+        //       iron: '8%'
+        //     },
+        //     {
+        //       value: false,
+        //       name: 'Gingerbread',
+        //       calories: 356,
+        //       fat: 16.0,
+        //       carbs: 49,
+        //       protein: 3.9,
+        //       iron: '16%'
+        //     },
+        //     {
+        //       value: false,
+        //       name: 'Jelly bean',
+        //       calories: 375,
+        //       fat: 0.0,
+        //       carbs: 94,
+        //       protein: 0.0,
+        //       iron: '0%'
+        //     },
+        //     {
+        //       value: false,
+        //       name: 'Lollipop',
+        //       calories: 392,
+        //       fat: 0.2,
+        //       carbs: 98,
+        //       protein: 0,
+        //       iron: '2%'
+        //     },
+        //     {
+        //       value: false,
+        //       name: 'Honeycomb',
+        //       calories: 408,
+        //       fat: 3.2,
+        //       carbs: 87,
+        //       protein: 6.5,
+        //       iron: '45%'
+        //     },
+        //     {
+        //       value: false,
+        //       name: 'Donut',
+        //       calories: 452,
+        //       fat: 25.0,
+        //       carbs: 51,
+        //       protein: 4.9,
+        //       iron: '22%'
+        //     },
+        //     {
+        //       value: false,
+        //       name: 'KitKat',
+        //       calories: 518,
+        //       fat: 26.0,
+        //       carbs: 65,
+        //       protein: 7,
+        //       iron: '6%'
+        //     }
+        //   ]
+
+      }),
+
+
+
+    })
+  </script>
+</body>
+
+</html>
